@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="robots" content="noindex,nofollow" />
+  <title>Copy Contract Address</title>
+  <style>
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; 
+           background:#0b0f14; color:#e6edf3; display:flex; min-height:100vh; 
+           align-items:center; justify-content:center; margin:0; }
+    .card { background:#111827; padding:24px 28px; border-radius:14px; 
+            box-shadow:0 10px 30px rgba(0,0,0,.35); width:min(560px,92vw); }
+    h1 { font-size:20px; margin:0 0 12px; }
+    code { background:#0b1220; padding:6px 8px; border-radius:8px; word-break:break-all; }
+    .row { display:flex; gap:10px; margin-top:14px; flex-wrap:wrap; }
+    button, a.btn {
+      display:inline-block; padding:10px 14px; border-radius:10px; border:0;
+      background:#5865F2; color:white; font-weight:600; text-decoration:none; cursor:pointer;
+    }
+    button.secondary, a.secondary { background:#24324a; color:#cdd6e3; }
+    .ok { color:#34d399; font-weight:700; margin-top:10px; }
+    .err { color:#f87171; font-weight:700; margin-top:10px; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Copy Contract Address</h1>
+    <div id="caWrap"><code id="ca">(no CA)</code></div>
+    <div class="row">
+      <button id="copyBtn">Copy</button>
+      <a id="openBullx" class="btn secondary" target="_blank" rel="noopener">BullX</a>
+      <a id="openGMGN" class="btn secondary" target="_blank" rel="noopener">GMGN</a>
+      <a id="openRug"  class="btn secondary" target="_blank" rel="noopener">RugCheck</a>
+    </div>
+    <div id="msg"></div>
+  </div>
+
+  <script>
+    (function() {
+      const params = new URLSearchParams(location.search);
+      const ca = (params.get('ca') || '').trim();
+      const caEl = document.getElementById('ca');
+      const msg  = document.getElementById('msg');
+      const copyBtn = document.getElementById('copyBtn');
+
+      const bullx = document.getElementById('openBullx');
+      const gmgn  = document.getElementById('openGMGN');
+      const rug   = document.getElementById('openRug');
+
+      function setMsg(text, ok=true) {
+        msg.textContent = text;
+        msg.className = ok ? 'ok' : 'err';
+      }
+
+      if (!ca) {
+        caEl.textContent = '(missing ?ca=)';
+        copyBtn.disabled = true;
+        setMsg('No CA provided in URL.', false);
+      } else {
+        caEl.textContent = ca;
+        bullx.href = `https://neo.bullx.io/terminal?chainId=1399811149&address=${encodeURIComponent(ca)}`;
+        gmgn.href  = `https://gmgn.ai/sol/token/${encodeURIComponent(ca)}`;
+        rug.href   = `https://rugcheck.xyz/tokens/${encodeURIComponent(ca)}`;
+
+        // Try auto-copy on load (some browsers require a gesture; we try anyway)
+        navigator.clipboard?.writeText(ca).then(
+          () => setMsg('Copied!'),
+          () => setMsg('Tap Copy to place on clipboard.', false)
+        );
+
+        copyBtn.addEventListener('click', async () => {
+          try {
+            await navigator.clipboard.writeText(ca);
+            setMsg('Copied!');
+          } catch {
+            // Fallback: select text for manual copy
+            const range = document.createRange();
+            range.selectNodeContents(caEl);
+            const sel = window.getSelection();
+            sel.removeAllRanges();
+            sel.addRange(range);
+            setMsg('Press Ctrl/Cmd + C to copy.', false);
+          }
+        });
+      }
+    })();
+  </script>
+</body>
+</html>
