@@ -53,6 +53,16 @@
         msg.className = ok ? 'ok' : 'err';
       }
 
+      function tryCloseSoon() {
+        function doClose() {
+          window.close();
+          setTimeout(()=>{ window.open('','_self'); window.close(); }, 100);
+          setTimeout(()=>{ location.replace('about:blank'); }, 200);
+        }
+        setMsg('Copied! Closing…');
+        setTimeout(doClose, 150);
+      }
+
       if (!ca) {
         caEl.textContent = '(missing ?ca=)';
         copyBtn.disabled = true;
@@ -63,18 +73,17 @@
         gmgn.href  = `https://gmgn.ai/sol/token/${encodeURIComponent(ca)}`;
         rug.href   = `https://rugcheck.xyz/tokens/${encodeURIComponent(ca)}`;
 
-        // Try auto-copy on load (some browsers require a gesture; we try anyway)
+        // Auto-copy on load
         navigator.clipboard?.writeText(ca).then(
-          () => setMsg('Copied!'),
+          () => tryCloseSoon(),
           () => setMsg('Tap Copy to place on clipboard.', false)
         );
 
         copyBtn.addEventListener('click', async () => {
           try {
             await navigator.clipboard.writeText(ca);
-            setMsg('Copied!');
+            tryCloseSoon();
           } catch {
-            // Fallback: select text for manual copy
             const range = document.createRange();
             range.selectNodeContents(caEl);
             const sel = window.getSelection();
